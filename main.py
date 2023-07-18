@@ -63,7 +63,7 @@ class Main():
             "name":name,
             "file":file
         })
-    def lda__multi(self,queue,total_len,lines_,name,file,s):
+    def lda__multi(self,queue,lines_,name,file,s):
         ps=[]
         for i in range(self.amount):
             p=Process(target=self.lda__,args=(queue,lines_[i],name,file,i,s))
@@ -100,11 +100,11 @@ class Main():
             self.data_processed.append({"data":slice_data(self.read_out1(self.data[i]["file"]),self.amount),"name":self.data[i]['name'],"file":self.data[i]["file"]})
         print("开始运行LDA")
         for i in range(len(self.data)):
-            self.lda__multi(self.queue,self.get_processed_len(self.data_processed[i]["data"]),self.data_processed[i]["data"],self.data_processed[i]["name"],self.data_processed[i]["file"],i)
+            self.lda__multi(self.queue,self.data_processed[i]["data"],self.data_processed[i]["name"],self.data_processed[i]["file"],i)
         while(True):
-
+            time.sleep(0.5)
             for i in range(len(self.data)):
-                self.lda_bar_func(len(self.data[i]["data"]),self.condition["condidtion"][i],self.data[i]["file"])
+                self.lda_bar_func(self.get_processed_len(self.data_processed[i]["data"]),self.condition["completed"][i],self.data_processed[i]["file"])
             m=self.queue.get()
             if(m["type"]=="lda"):
                 self.condition["completed"][m["s"]]+=self.overlapping*self.analyse_window
@@ -125,7 +125,7 @@ class Main():
                         k_=False
                 if(k_):
                   break
-            print("LDA完成 准备进行数据整理")
+        print("LDA完成 准备进行数据整理")
             
 if __name__ == '__main__':
     main=Main()
