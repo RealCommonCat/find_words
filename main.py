@@ -6,11 +6,12 @@ from multiprocessing import Process
 from bar import print_progress_bar
 import time
 from lda_ import lda_
-from compare_with_dict import compare_with_dict
 from data_slice import slice_data 
 from multiprocessing import Lock 
 import multiprocessing
+from compare_with_dict import compare_with_dict
 SPLIT="@@@@@"
+SPLIT_1="@@@@"
 class Main():
     def read_data(self):
         print("开始读取数据")
@@ -85,15 +86,27 @@ class Main():
             c0+=c
         print_progress_bar(c0,total,prefix="LDA: ",suffix='Completed')
     def results_process(self):
-        out2_files=os.listdir(self.out2)
-        for f in out2_files:
-            fs=open(self.out2+"/"+f,"r",encoding="utf-8")
-            
+        fs=os.listdir(self.out2)
+        results=[]
+        for f in fs:
+            fd=open(self.out2+"/"+f,"r",encoding="utf-8")
+            results.append({"file":f,"data":compare_with_dict(self.k,fd.read().split(SPLIT))})
+            fd.close()
+        for result in results:
+            fd=open(self.out3+"/"+result["file"]+".out3","w",encoding="utf-8")
+            for d in result["data"]:
+                fd.write(str(d["idx"])+"\n")
+                for i in range(len(d["words"])):
+                    w=d["words"][i]
+                    f_=d["floats"][i]
+                    fd.write(w+SPLIT_1+str(f_)+SPLIT_1)
+            fd.close()
     def __init__(self):   
         self.lock=Lock()
         self.data=[]
         self.out1="./out1"
         self.out2="./out2"
+        self.out3="./out3"
         self.reg_date=r"\d{4}-\d{2}-\d{2}\s\d{1,2}:\d{2}:\d{2}"
         self.k=0.1
         self.analyse_window=1000
@@ -141,6 +154,7 @@ class Main():
                             if(out_["process_idx"]==i):
                                 for o in out_["data"]:
                                     fd.write(o)
+                    fd.close()
                 k_=True
                 for k in self.condition["remained_lda"]:
                     if ~k:
@@ -148,6 +162,6 @@ class Main():
                 if(k_):
                   break
         print("LDA完成 准备进行数据整理")
-        #self.results_process()
+        self.results_process()
 if __name__ == '__main__':
     main=Main()
